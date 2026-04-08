@@ -1,0 +1,12 @@
+{
+  "name": "Flutter Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/universal:2", 
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {}
+  },
+  "extensions": [
+    "dart-code.flutter",
+    "dart-code.dart-code"
+  ],
+  "postCreateCommand": "bash .devcontainer/setup.sh"
+}
