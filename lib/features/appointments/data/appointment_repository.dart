@@ -16,6 +16,11 @@ class AppointmentRepository {
 
   Stream<List<AppointmentWithPatient>> watchAllAppointments() => _appointmentDao.watchAllAppointments();
   
+  Stream<int> watchAppointmentCount() => _appointmentDao.watchAppointmentCount();
+
+  Stream<List<Appointment>> watchAppointmentsForPatient(int patientId) =>
+      _appointmentDao.watchAppointmentsForPatient(patientId);
+  
   Future<int> addAppointment({
     required int patientId,
     required DateTime dateTime,

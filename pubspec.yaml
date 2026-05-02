@@ -49,6 +49,8 @@ dependencies:
   archive: ^3.6.1
   lucide_icons: ^0.257.0
   table_calendar: ^3.1.2
+  window_manager: ^0.5.1
+  file_picker: ^11.0.2
 
 dev_dependencies:
   flutter_test:

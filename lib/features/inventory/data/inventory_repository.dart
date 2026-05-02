@@ -16,6 +16,8 @@ class InventoryRepository {
 
   Stream<List<Medicine>> watchAllMedicines() => _inventoryDao.watchAllMedicines();
   
+  Stream<int> watchLowStockCount(int threshold) => _inventoryDao.watchLowStockCount(threshold);
+  
   Future<int> addMedicine({
     required String name,
     String? batchNumber,

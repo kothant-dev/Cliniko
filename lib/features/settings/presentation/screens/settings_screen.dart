@@ -1,7 +1,9 @@
 import 'package:cliniko/core/db/database_provider.dart';
 import 'package:cliniko/core/theme/app_theme.dart';
+import 'package:cliniko/core/widgets/glass_card.dart';
 import 'package:cliniko/services/backup_service.dart';
 import 'package:cliniko/services/demo_data_service.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -80,8 +82,33 @@ class SettingsScreen extends ConsumerWidget {
                 icon: LucideIcons.upload,
                 title: 'Import Data',
                 subtitle: 'Restore your clinic data from a ZIP backup',
-                onTap: () {
-                  // Implement file picker logic
+                onTap: () async {
+                  final result = await FilePicker.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['zip'],
+                  );
+
+                  if (result != null) {
+                    final path = result.files.single.path;
+                    if (path != null) {
+                      final db = ref.read(databaseProvider);
+                      final service = BackupService(db);
+                      try {
+                        await service.importBackup(path);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Data restored successfully!')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error restoring backup: $e')),
+                          );
+                        }
+                      }
+                    }
+                  }
                 },
               ),
             ],
@@ -116,12 +143,21 @@ class SettingsScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.primaryColor),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 13, 
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 0.5,
+            ),
+          ),
         ),
         const SizedBox(height: AppTheme.space12),
-        Card(
+        GlassCard(
+          padding: EdgeInsets.zero,
           child: Column(children: children),
         ),
       ],

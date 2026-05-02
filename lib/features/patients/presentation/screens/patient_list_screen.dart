@@ -1,12 +1,18 @@
 import 'package:cliniko/core/db/database.dart';
 import 'package:cliniko/core/theme/app_theme.dart';
+import 'package:cliniko/core/widgets/glass_card.dart';
 import 'package:cliniko/features/patients/data/patient_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 final patientsStreamProvider = StreamProvider<List<Patient>>((ref) {
   return ref.watch(patientRepositoryProvider).watchAllPatients();
+});
+
+final patientCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(patientRepositoryProvider).watchPatientCount();
 });
 
 class PatientListScreen extends ConsumerWidget {
@@ -53,18 +59,24 @@ class PatientListScreen extends ConsumerWidget {
       itemCount: patients.length,
       itemBuilder: (context, index) {
         final patient = patients[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppTheme.space12),
-          child: ListTile(
-            leading: CircleAvatar(
-              child: Text(patient.name[0].toUpperCase()),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.space12),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space16, vertical: AppTheme.space8),
+              leading: CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                child: Text(patient.name[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              title: Text(patient.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(patient.phone ?? 'No phone'),
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: () {
+                context.go('/patients/${patient.id}');
+              },
             ),
-            title: Text(patient.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(patient.phone ?? 'No phone'),
-            trailing: const Icon(LucideIcons.chevronRight),
-            onTap: () {
-              // TODO: Navigate to details
-            },
           ),
         );
       },

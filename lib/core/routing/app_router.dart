@@ -1,15 +1,22 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:cliniko/features/appointments/presentation/screens/calendar_screen.dart';
 import 'package:cliniko/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:cliniko/features/dashboard/presentation/screens/transaction_list_screen.dart';
 import 'package:cliniko/features/inventory/presentation/screens/inventory_list_screen.dart';
+import 'package:cliniko/features/patients/presentation/screens/patient_detail_screen.dart';
 import 'package:cliniko/features/patients/presentation/screens/patient_list_screen.dart';
 import 'package:cliniko/features/settings/presentation/screens/settings_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:window_manager/window_manager.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+final GlobalKey<NavigatorState> _rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _shellNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 class AppRouter {
   static final router = GoRouter(
@@ -29,6 +36,16 @@ class AppRouter {
           GoRoute(
             path: '/patients',
             builder: (context, state) => const PatientListScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return PatientDetailScreen(patientId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/appointments',
@@ -64,8 +81,7 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          if (isDesktop)
-            const Sidebar(),
+          if (isDesktop) const Sidebar(),
           Expanded(
             child: Column(
               children: [
@@ -88,17 +104,36 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 250,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.3),
       child: const Column(
         children: [
-          DrawerHeader(child: Center(child: Text('Cliniko', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)))),
-          _SidebarItem(icon: LucideIcons.layoutDashboard, label: 'Dashboard', path: '/dashboard'),
-          _SidebarItem(icon: LucideIcons.users, label: 'Patients', path: '/patients'),
-          _SidebarItem(icon: LucideIcons.calendar, label: 'Appointments', path: '/appointments'),
-          _SidebarItem(icon: LucideIcons.package, label: 'Inventory', path: '/inventory'),
-          _SidebarItem(icon: LucideIcons.dollarSign, label: 'Revenue', path: '/revenue'),
+          DrawerHeader(
+              child: Center(
+                  child: Text('Cliniko',
+                      style: TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold)))),
+          _SidebarItem(
+              icon: LucideIcons.layoutDashboard,
+              label: 'Dashboard',
+              path: '/dashboard'),
+          _SidebarItem(
+              icon: LucideIcons.users, label: 'Patients', path: '/patients'),
+          _SidebarItem(
+              icon: LucideIcons.calendar,
+              label: 'Appointments',
+              path: '/appointments'),
+          _SidebarItem(
+              icon: LucideIcons.package,
+              label: 'Inventory',
+              path: '/inventory'),
+          _SidebarItem(
+              icon: LucideIcons.dollarSign, label: 'Revenue', path: '/revenue'),
           Spacer(),
-          _SidebarItem(icon: LucideIcons.settings, label: 'Settings', path: '/settings'),
+          _SidebarItem(
+              icon: LucideIcons.settings, label: 'Settings', path: '/settings'),
           SizedBox(height: 20),
         ],
       ),
@@ -107,7 +142,8 @@ class Sidebar extends StatelessWidget {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({required this.icon, required this.label, required this.path});
+  const _SidebarItem(
+      {required this.icon, required this.label, required this.path});
 
   final IconData icon;
   final String label;
@@ -117,8 +153,12 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = GoRouterState.of(context).uri.path == path;
     return ListTile(
-      leading: Icon(icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
-      title: Text(label, style: TextStyle(color: isSelected ? Theme.of(context).colorScheme.primary : null, fontWeight: isSelected ? FontWeight.bold : null)),
+      leading: Icon(icon,
+          color: isSelected ? Theme.of(context).colorScheme.primary : null),
+      title: Text(label,
+          style: TextStyle(
+              color: isSelected ? Theme.of(context).colorScheme.primary : null,
+              fontWeight: isSelected ? FontWeight.bold : null)),
       onTap: () => context.go(path),
     );
   }
@@ -129,37 +169,96 @@ class TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 60,
+    final isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+    final Widget content = Container(
+      height: isDesktop ? 40 : 60, // Smaller on desktop to act as title bar
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.1))),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+            bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1))),
       ),
       child: Row(
         children: [
           Text(
             _getTitle(GoRouterState.of(context).uri.path),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
-          IconButton(icon: const Icon(LucideIcons.bell), onPressed: () {}),
-          const SizedBox(width: 10),
-          const CircleAvatar(radius: 15, child: Icon(LucideIcons.user, size: 15)),
+          if (!isDesktop) ...[
+            IconButton(icon: const Icon(LucideIcons.bell), onPressed: () {}),
+            const SizedBox(width: 10),
+            const CircleAvatar(
+                radius: 15, child: Icon(LucideIcons.user, size: 15)),
+          ] else ...[
+            const WindowControls(),
+          ]
         ],
       ),
     );
+
+    if (isDesktop) {
+      return DragToMoveArea(
+        child: content,
+      );
+    }
+    return content;
   }
 
   String _getTitle(String path) {
     switch (path) {
-      case '/dashboard': return 'Dashboard';
-      case '/patients': return 'Patients';
-      case '/appointments': return 'Appointments';
-      case '/inventory': return 'Inventory';
-      case '/revenue': return 'Revenue';
-      case '/settings': return 'Settings';
-      default: return 'Cliniko';
+      case '/dashboard':
+        return 'Dashboard';
+      case '/patients':
+        return 'Patients';
+      case '/appointments':
+        return 'Appointments';
+      case '/inventory':
+        return 'Inventory';
+      case '/revenue':
+        return 'Revenue';
+      case '/settings':
+        return 'Settings';
+      default:
+        return 'Cliniko';
     }
+  }
+}
+
+class WindowControls extends StatelessWidget {
+  const WindowControls({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(LucideIcons.minus, size: 16),
+          onPressed: () => unawaited(windowManager.minimize()),
+          splashRadius: 20,
+        ),
+        IconButton(
+          icon: const Icon(LucideIcons.square, size: 16),
+          onPressed: () async {
+            if (await windowManager.isMaximized()) {
+              unawaited(windowManager.unmaximize());
+            } else {
+              unawaited(windowManager.maximize());
+            }
+          },
+          splashRadius: 20,
+        ),
+        IconButton(
+          icon: const Icon(LucideIcons.x, size: 16),
+          onPressed: () => unawaited(windowManager.close()),
+          splashRadius: 20,
+          hoverColor: Colors.red.withValues(alpha: 0.8),
+        ),
+      ],
+    );
   }
 }
 
@@ -172,22 +271,38 @@ class MobileNavBar extends StatelessWidget {
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: (index) {
-        final paths = ['/dashboard', '/patients', '/appointments', '/inventory', '/revenue', '/settings'];
+        final paths = [
+          '/dashboard',
+          '/patients',
+          '/appointments',
+          '/inventory',
+          '/revenue',
+          '/settings'
+        ];
         context.go(paths[index]);
       },
       destinations: const [
-        NavigationDestination(icon: Icon(LucideIcons.layoutDashboard), label: 'Dash'),
+        NavigationDestination(
+            icon: Icon(LucideIcons.layoutDashboard), label: 'Dash'),
         NavigationDestination(icon: Icon(LucideIcons.users), label: 'Patients'),
         NavigationDestination(icon: Icon(LucideIcons.calendar), label: 'Appts'),
         NavigationDestination(icon: Icon(LucideIcons.package), label: 'Inv'),
         NavigationDestination(icon: Icon(LucideIcons.dollarSign), label: 'Rev'),
-        NavigationDestination(icon: Icon(LucideIcons.settings), label: 'Settings'),
+        NavigationDestination(
+            icon: Icon(LucideIcons.settings), label: 'Settings'),
       ],
     );
   }
 
   int _getIndex(String path) {
-    final paths = ['/dashboard', '/patients', '/appointments', '/inventory', '/revenue', '/settings'];
+    final paths = [
+      '/dashboard',
+      '/patients',
+      '/appointments',
+      '/inventory',
+      '/revenue',
+      '/settings'
+    ];
     return paths.indexOf(path).clamp(0, 5);
   }
 }

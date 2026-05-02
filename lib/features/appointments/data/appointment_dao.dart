@@ -21,6 +21,19 @@ class AppointmentDao extends DatabaseAccessor<AppDatabase> with _$AppointmentDao
       }).toList();
     });
   }
+  
+  Stream<int> watchAppointmentCount() {
+    final count = appointments.id.count();
+    final query = selectOnly(appointments)..addColumns([count]);
+    return query.map((row) => row.read(count)!).watchSingle();
+  }
+
+  Stream<List<Appointment>> watchAppointmentsForPatient(int patientId) {
+    return (select(appointments)
+          ..where((t) => t.patientId.equals(patientId))
+          ..orderBy([(t) => OrderingTerm.desc(t.datetime)]))
+        .watch();
+  }
 
   Future<int> insertAppointment(AppointmentsCompanion entry) => into(appointments).insert(entry);
   

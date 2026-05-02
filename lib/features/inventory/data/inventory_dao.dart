@@ -9,6 +9,14 @@ class InventoryDao extends DatabaseAccessor<AppDatabase> with _$InventoryDaoMixi
 
   Stream<List<Medicine>> watchAllMedicines() => select(medicines).watch();
   
+  Stream<int> watchLowStockCount(int threshold) {
+    final count = medicines.id.count();
+    final query = selectOnly(medicines)
+      ..addColumns([count])
+      ..where(medicines.stockQuantity.isSmallerThanValue(threshold));
+    return query.map((row) => row.read(count)!).watchSingle();
+  }
+  
   Future<List<Medicine>> getAllMedicines() => select(medicines).get();
   
   Future<int> insertMedicine(MedicinesCompanion entry) => into(medicines).insert(entry);

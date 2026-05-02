@@ -1,5 +1,6 @@
 import 'package:cliniko/core/db/database.dart';
 import 'package:cliniko/core/theme/app_theme.dart';
+import 'package:cliniko/core/widgets/glass_card.dart';
 import 'package:cliniko/features/appointments/data/appointment_dao.dart';
 import 'package:cliniko/features/appointments/data/appointment_repository.dart';
 import 'package:cliniko/features/patients/data/patient_repository.dart';
@@ -11,6 +12,10 @@ import 'package:table_calendar/table_calendar.dart';
 
 final appointmentsStreamProvider = StreamProvider<List<AppointmentWithPatient>>((ref) {
   return ref.watch(appointmentRepositoryProvider).watchAllAppointments();
+});
+
+final appointmentCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(appointmentRepositoryProvider).watchAppointmentCount();
 });
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -117,18 +122,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final item = filtered[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppTheme.space12),
-          child: ListTile(
-            leading: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(DateFormat('HH:mm').format(item.appointment.datetime), style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.space12),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space16, vertical: AppTheme.space8),
+              leading: Container(
+                padding: const EdgeInsets.all(AppTheme.space8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('HH:mm').format(item.appointment.datetime), 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 14,
+                      )
+                    ),
+                  ],
+                ),
+              ),
+              title: Text(item.patient.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                item.appointment.notes?.isNotEmpty == true ? item.appointment.notes! : 'No notes provided',
+                style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: _StatusBadge(status: item.appointment.status),
             ),
-            title: Text(item.patient.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(item.appointment.notes ?? 'No notes'),
-            trailing: _StatusBadge(status: item.appointment.status),
           ),
         );
       },

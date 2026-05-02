@@ -1,5 +1,6 @@
 import 'package:cliniko/core/db/database.dart';
 import 'package:cliniko/core/theme/app_theme.dart';
+import 'package:cliniko/core/widgets/glass_card.dart';
 import 'package:cliniko/features/dashboard/data/transaction_dao.dart';
 import 'package:cliniko/features/dashboard/data/transaction_repository.dart';
 import 'package:cliniko/features/patients/data/patient_repository.dart';
@@ -58,28 +59,35 @@ class TransactionListScreen extends ConsumerWidget {
         final item = transactions[index];
         final isIncome = item.transaction.type == 'income';
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppTheme.space12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isIncome ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-              child: Icon(
-                isIncome ? LucideIcons.arrowUpRight : LucideIcons.arrowDownRight,
-                color: isIncome ? Colors.green : Colors.red,
-                size: 18,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.space12),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space16, vertical: AppTheme.space8),
+              leading: CircleAvatar(
+                backgroundColor: isIncome ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                child: Icon(
+                  isIncome ? LucideIcons.arrowUpRight : LucideIcons.arrowDownRight,
+                  color: isIncome ? Colors.green : Colors.red,
+                  size: 18,
+                ),
               ),
-            ),
-            title: Text(
-              item.patient?.name ?? (isIncome ? 'Direct Income' : 'Clinic Expense'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(DateFormat('yyyy-MM-dd HH:mm').format(item.transaction.createdAt)),
-            trailing: Text(
-              '${isIncome ? "+" : "-"}\$${item.transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: isIncome ? Colors.green : Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+              title: Text(
+                item.patient?.name ?? (isIncome ? 'Direct Income' : 'Clinic Expense'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                DateFormat('MMM dd, yyyy • HH:mm').format(item.transaction.createdAt),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
+              ),
+              trailing: Text(
+                '${isIncome ? "+" : "-"}\$${item.transaction.amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isIncome ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),

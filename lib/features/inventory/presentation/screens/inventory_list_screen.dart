@@ -1,5 +1,6 @@
 import 'package:cliniko/core/db/database.dart';
 import 'package:cliniko/core/theme/app_theme.dart';
+import 'package:cliniko/core/widgets/glass_card.dart';
 import 'package:cliniko/features/inventory/data/inventory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 final inventoryStreamProvider = StreamProvider<List<Medicine>>((ref) {
   return ref.watch(inventoryRepositoryProvider).watchAllMedicines();
+});
+
+final lowStockCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(inventoryRepositoryProvider).watchLowStockCount(10);
 });
 
 class InventoryListScreen extends ConsumerWidget {
@@ -58,35 +63,74 @@ class InventoryListScreen extends ConsumerWidget {
         final isNearExpiry = medicine.expiryDate != null && 
             medicine.expiryDate!.difference(DateTime.now()).inDays < 30;
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppTheme.space12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isLowStock ? Colors.orange.withValues(alpha: 0.2) : null,
-              child: Icon(LucideIcons.pill, color: isLowStock ? Colors.orange : null),
-            ),
-            title: Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Stock: ${medicine.stockQuantity} | Batch: ${medicine.batchNumber ?? 'N/A'}'),
-                if (medicine.expiryDate != null)
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.space12),
+          child: GlassCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space16, vertical: AppTheme.space8),
+              leading: CircleAvatar(
+                backgroundColor: isLowStock 
+                    ? Colors.orange.withValues(alpha: 0.1) 
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                child: Icon(
+                  LucideIcons.pill, 
+                  color: isLowStock ? Colors.orange : Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+              title: Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    'Expires: ${DateFormat('yyyy-MM-dd').format(medicine.expiryDate!)}',
-                    style: TextStyle(color: isNearExpiry ? Colors.red : null, fontSize: 12),
+                    'Stock: ${medicine.stockQuantity} | Batch: ${medicine.batchNumber ?? 'N/A'}',
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).disabledColor),
                   ),
-              ],
+                  if (medicine.expiryDate != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.calendar, size: 12, color: isNearExpiry ? Colors.red : Theme.of(context).disabledColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Exp: ${DateFormat('MMM dd, yyyy').format(medicine.expiryDate!)}',
+                            style: TextStyle(
+                              color: isNearExpiry ? Colors.red : Theme.of(context).disabledColor,
+                              fontSize: 11,
+                              fontWeight: isNearExpiry ? FontWeight.bold : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$${medicine.unitPrice.toStringAsFixed(2)}', 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  if (isLowStock)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'LOW STOCK', 
+                        style: TextStyle(color: Colors.orange, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
+              ),
+              onTap: () => _showUpdateStockDialog(context, ref, medicine),
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text('\$${medicine.unitPrice.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                if (isLowStock)
-                  const Text('LOW STOCK', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            onTap: () => _showUpdateStockDialog(context, ref, medicine),
           ),
         );
       },

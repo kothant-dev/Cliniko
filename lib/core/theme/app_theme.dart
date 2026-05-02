@@ -19,22 +19,31 @@ class AppTheme {
   static const double radiusLarge = 20.0;
 
   // Colors - Clinic Brand (Modern Teal/Blue)
-  static const Color primaryColor = Color(0xFF00796B);
-  static const Color secondaryColor = Color(0xFF004D40);
+  static const Color primaryColor = Color(0xFF0D9488); // Teal 600
+  static const Color secondaryColor = Color(0xFF0F766E); // Teal 700
+  static const Color accentColor = Color(0xFF14B8A6); // Teal 500
+  static const Color backgroundLight = Color(0xFFF8FAFC); // Slate 50
+  static const Color backgroundDark = Color(0xFF0F172A); // Slate 900
+  static const Color surfaceDark = Color(0xFF1E293B); // Slate 800
 
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
+        primary: primaryColor,
+        secondary: secondaryColor,
+        tertiary: accentColor,
+        surface: Colors.white,
       ),
+      scaffoldBackgroundColor: backgroundLight,
       textTheme: GoogleFonts.interTextTheme(),
       cardTheme: CardTheme(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
         ),
         elevation: 0,
-        color: Colors.white.withValues(alpha: 0.8),
+        color: Colors.white.withValues(alpha: 0.9),
       ),
     );
   }
@@ -45,15 +54,19 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.dark,
-        surface: const Color(0xFF121212),
+        primary: primaryColor,
+        secondary: secondaryColor,
+        tertiary: accentColor,
+        surface: surfaceDark,
       ),
+      scaffoldBackgroundColor: backgroundDark,
       textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       cardTheme: CardTheme(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
         ),
         elevation: 0,
-        color: const Color(0xFF1E1E1E).withValues(alpha: 0.8),
+        color: surfaceDark.withValues(alpha: 0.9),
       ),
     );
   }
@@ -61,17 +74,25 @@ class AppTheme {
   // Glassmorphism Decoration
   static BoxDecoration glassDecoration({
     required BuildContext context,
-    double blur = 15.0,
+    double blur = 20.0,
     double opacity = 0.7,
     BorderRadius? borderRadius,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? surfaceDark : Colors.white;
     return BoxDecoration(
-      color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withValues(alpha: opacity),
+      color: color.withValues(alpha: opacity),
       borderRadius: borderRadius ?? BorderRadius.circular(radiusMedium),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
     );
   }
 
